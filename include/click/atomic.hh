@@ -30,7 +30,7 @@ CLICK_CXX_UNPROTECT
 
 
 #if HAVE_MULTITHREAD && HAVE_ATOMIC_BUILTINS
-//    #pragma message "atomic.hh: using builtins implementation"
+   #pragma message "atomic.hh: using builtins implementation"
     # define CLICK_ATOMIC_BUILTINS 1
     # define CLICK_ATOMIC_MEMORDER __ATOMIC_SEQ_CST
     //	compare_swap methods are not atomic if using builtins. Disable them
@@ -39,7 +39,7 @@ CLICK_CXX_UNPROTECT
     # define CLICK_ATOMIC_COMPARE_SWAP 0
 #else
     # define CLICK_ATOMIC_BUILTINS 0
-//    #pragma message "atomic.hh: Using click own implementation"
+   #pragma message "atomic.hh: Using click own implementation"
     // compare_swap are truly atomics if correctly implemented (e.g. x86).
     // In this case, we maintain the original Click's deprecation flags
     # define CLICK_BUILTINS_DEPRECATED
@@ -418,6 +418,7 @@ inline uint32_t
 atomic_uint32_t::swap(volatile uint32_t &x, uint32_t desired)
 {
 #if CLICK_ATOMIC_BUILTINS
+   #pragma message "using correct implementation"
     uint32_t actual = x;
     __atomic_exchange(&x, &desired, &actual, CLICK_ATOMIC_MEMORDER);
     return actual;
@@ -433,8 +434,12 @@ atomic_uint32_t::swap(volatile uint32_t &x, uint32_t desired)
 #elif CLICK_LINUXMODULE
 # error "need xchg for atomic_uint32_t::swap"
 #else
+   #pragma message "using incorrect builtin"
+    // uint32_t actual = x;
+    // x = desired;
+    // return actual;
     uint32_t actual = x;
-    x = desired;
+    __atomic_exchange(&x, &desired, &actual, CLICK_ATOMIC_MEMORDER);
     return actual;
 #endif
 }

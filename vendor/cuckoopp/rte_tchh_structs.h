@@ -9,8 +9,9 @@
 #ifndef RTE_TCHH_STRUCTS_H
 #define RTE_TCHH_STRUCTS_H
 
-#include "x86intrin.h"
-#include "immintrin.h"
+// #include "x86intrin.h"
+// #include "immintrin.h"
+#include "sse2neon.h"
 
 struct rte_tch_key {
 	union{

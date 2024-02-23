@@ -7,8 +7,9 @@
 #include <click/flow/common.hh>
 #include <click/routervisitor.hh>
 #ifdef HAVE_AVX2
-#include <immintrin.h>
+// #include <immintrin.h>
 #endif
+#include <sse2neon.h>
 #include <algorithm>
 #include <click/flow/flowelement.hh>
 #include <type_traits>

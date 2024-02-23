@@ -10,7 +10,8 @@
 #include <click/glue.hh>
 #include <click/flowbuffer.hh>
 #include <click/flow/ctxelement.hh>
-#include <immintrin.h>
+// #include <immintrin.h>
+#include <sse2neon.h>
 
 CLICK_DECLS
 

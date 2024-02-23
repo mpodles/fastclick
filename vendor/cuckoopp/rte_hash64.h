@@ -10,8 +10,11 @@
 #ifndef RTE_HASH64_H
 #define RTE_HASH64_H
 
-#include "x86intrin.h"
-#include "immintrin.h"
+// #include "x86intrin.h"
+// #include "immintrin.h"
+// #include "arm_neon.h"
+#include <sse2neon.h>
+// #include "arm_acle.h"
 #include "rte_tchh_structs.h"
 
 

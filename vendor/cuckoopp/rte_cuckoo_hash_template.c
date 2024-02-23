@@ -37,7 +37,9 @@
 #include <assert.h>
 #include <math.h>
 
-#include <x86intrin.h>
+// #include <x86intrin.h>
+// #include <arm_neon.h>
+#include <sse2neon.h>
 //#include "rte_hash_template.h"
 
 #include "rte_hash64.h"
@@ -250,8 +252,8 @@ static inline uint32_t matches_and_not_expired_maskpos(const struct rte_hash_hva
 	__m128i current_time_simd = _mm_set1_epi16(currentTime);
 	__m128i ref_hashes = _mm_set1_epi16(hash >> 16);
 
-	__m128i bucket_hashes = _mm_load_si128((__m128i*)&b->primary_signature_high);
-	__m128i bucket_expiration = _mm_load_si128((__m128i*)&b->expire_date_timeunit);
+	__m128i bucket_hashes = _mm_load_si128(&b->primary_signature_high);
+	__m128i bucket_expiration = _mm_load_si128(&b->expire_date_timeunit);
 
 	__m128i eq_hash = _mm_cmpeq_epi16(bucket_hashes,ref_hashes);
 	__m128i diff_time = _mm_sub_epi16(bucket_expiration,current_time_simd);
@@ -265,7 +267,7 @@ static inline uint32_t matches_and_not_expired_maskpos(const struct rte_hash_hva
 
 static inline uint32_t free_or_expired_maskpos(const struct rte_hash_hvariant_bucket* b, uint16_t currentTime){
 	__m128i current_time_simd = _mm_set1_epi16(currentTime);
-	__m128i bucket_expiration = _mm_load_si128((__m128i*)&b->expire_date_timeunit);
+	__m128i bucket_expiration = _mm_load_si128(&b->expire_date_timeunit);
 
 	__m128i diff_time = _mm_sub_epi16(bucket_expiration,current_time_simd);
 	__m128i expired_lt = _mm_cmplt_epi16(max_expiration_time,diff_time);
@@ -309,7 +311,7 @@ static inline int matches_and_not_expired(const struct rte_hash_hvariant_bucket*
 
 static inline uint32_t matches_and_not_expired_maskpos(const struct rte_hash_hvariant_bucket* b, uint32_t hash, __rte_unused uint16_t currentTime){
 	__m128i ref_hashes = _mm_set1_epi16(hash >> 16);
-	__m128i bucket_hashes = _mm_load_si128((__m128i*)&b->primary_signature_high);
+	__m128i bucket_hashes = _mm_load_si128(&b->primary_signature_high);
 	__m128i eq_hash = _mm_cmpeq_epi16(bucket_hashes,ref_hashes);
 	__m128i matches_8bit = _mm_packs_epi16(eq_hash, eq_hash);
 
@@ -432,7 +434,7 @@ H(rte_hash,create)(const struct rte_hash_hvariant_parameters *params)
 
 
 	if (params == NULL) {
-		RTE_LOG(ERR, HASH, "rte_hash_hvariant_create has no parameters\n");
+		RTE_LOG(ERR, PMD, "rte_hash_hvariant_create has no parameters\n");
 		return NULL;
 	}
 
@@ -441,7 +443,7 @@ H(rte_hash,create)(const struct rte_hash_hvariant_parameters *params)
 			(params->entries < RTE_HASH_HVARIANT_BUCKET_ENTRIES) ||
 			!rte_is_power_of_2(RTE_HASH_HVARIANT_BUCKET_ENTRIES) ) {
 		rte_errno = EINVAL;
-		RTE_LOG(ERR, HASH, "rte_hash_hvariant_create has invalid parameters\n");
+		RTE_LOG(ERR, PMD, "rte_hash_hvariant_create has invalid parameters\n");
 		return NULL;
 	}
 
@@ -452,7 +454,7 @@ H(rte_hash,create)(const struct rte_hash_hvariant_parameters *params)
 					RTE_CACHE_LINE_SIZE, params->socket_id);
 
 	if (h == NULL) {
-		RTE_LOG(ERR, HASH, "memory allocation failed\n");
+		RTE_LOG(ERR, PMD, "memory allocation failed\n");
 		goto err;
 	}
 
@@ -463,7 +465,7 @@ H(rte_hash,create)(const struct rte_hash_hvariant_parameters *params)
 				RTE_CACHE_LINE_SIZE, params->socket_id);
 
 	if (buckets == NULL) {
-		RTE_LOG(ERR, HASH, "memory allocation failed\n");
+		RTE_LOG(ERR, PMD, "memory allocation failed\n");
 		goto err;
 	}
 
@@ -475,7 +477,7 @@ H(rte_hash,create)(const struct rte_hash_hvariant_parameters *params)
 			RTE_CACHE_LINE_SIZE, params->socket_id);
 
 	if (k == NULL) {
-		RTE_LOG(ERR, HASH, "memory allocation failed\n");
+		RTE_LOG(ERR, PMD, "memory allocation failed\n");
 		goto err;
 	}
 
@@ -483,7 +485,7 @@ H(rte_hash,create)(const struct rte_hash_hvariant_parameters *params)
 			RTE_CACHE_LINE_SIZE, params->socket_id);
 
 	if (iter_group_mask == NULL) {
-		RTE_LOG(ERR, HASH, "memory allocation failed\n");
+		RTE_LOG(ERR, PMD, "memory allocation failed\n");
 		goto err;
 	}
 
@@ -492,7 +494,7 @@ H(rte_hash,create)(const struct rte_hash_hvariant_parameters *params)
 				RTE_CACHE_LINE_SIZE, params->socket_id);
 
 		if (reset_group_mask == NULL) {
-			RTE_LOG(ERR, HASH, "memory allocation failed\n");
+			RTE_LOG(ERR, PMD, "memory allocation failed\n");
 			goto err;
 		}
 
@@ -549,7 +551,7 @@ static inline int
 rte_cmp_eq_m128i(const hash_key_t key1, const hash_key_t key2)
 {
 #if 0
-	__m128i vcmp = _mm_xor_si128(key1.mm, key2.mm);        // PXOR
+	int32x4_t vcmp = _mm_xor_si128(key1.mm, key2.mm);        // PXOR
 	return _mm_testz_si128(vcmp, vcmp);
 #else
 	return key1.a == key2.a && key1.b == key2.b;

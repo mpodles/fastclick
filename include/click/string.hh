@@ -13,7 +13,8 @@
 # include <string.h>
 #endif
 #if HAVE_AVX2
-#include <immintrin.h>
+// #include <immintrin.h>
+#include <sse2neon.h>
 #endif
 #define CLICK_CONSTANT_CSTR(cstr) ((cstr) && __builtin_constant_p(strlen((cstr))))
 CLICK_DECLS
